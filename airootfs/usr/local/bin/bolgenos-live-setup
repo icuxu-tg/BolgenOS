@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Ensure autologin group exists for LightDM PAM
+if ! getent group autologin >/dev/null 2>&1; then
+  groupadd -r autologin
+fi
+
+# Create live user on first boot of ISO
+if ! id popov &>/dev/null; then
+  useradd -m -G wheel,audio,video,autologin -s /bin/bash popov
+  passwd -d popov || true
+else
+  usermod -aG autologin popov || true
+fi
+
+# Ensure desktop launchers are executable and owned by popov
+if [ -d /home/popov/Desktop ]; then
+  chmod 0755 /home/popov/Desktop/*.desktop 2>/dev/null || true
+  chown -R popov:popov /home/popov
+fi
+
+# Ensure sudoers rule for live user
+install -Dm440 /dev/null /etc/sudoers.d/99-bolgenos-live
+printf '%s\n' 'popov ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/99-bolgenos-live
+
+# Locale & icons & dconf
+locale-gen || true
+gtk-update-icon-cache -f -t /usr/share/icons/hicolor >/dev/null 2>&1 || true
+
+if [ -d /etc/dconf/db/local.d ]; then
+  dconf update || true
+fi

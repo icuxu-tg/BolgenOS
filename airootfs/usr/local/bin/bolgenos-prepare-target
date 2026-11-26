@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Run inside target chroot right after unpackfs (before users, initcpio, bootloader).
+# 1. Remove archiso live mkinitcpio config so target builds a standard initramfs.
+rm -f /etc/mkinitcpio.conf.d/archiso.conf
+
+# 2. Restore kernel image removed from airootfs by mkarchiso.
+if [ ! -f /boot/vmlinuz-linux ]; then
+  for vmlinuz in /usr/lib/modules/*/vmlinuz; do
+    if [ -f "$vmlinuz" ]; then
+      install -Dm644 "$vmlinuz" /boot/vmlinuz-linux
+      break
+    fi
+  done
+fi
+
+if [ ! -f /etc/mkinitcpio.d/linux.preset ] && [ -f /usr/share/mkinitcpio/hook.preset ]; then
+  sed 's|%PKGBASE%|linux|g' /usr/share/mkinitcpio/hook.preset > /etc/mkinitcpio.d/linux.preset
+fi
+
+# 3. Remove live-session-only setup, autologin for popov, sudoers, and installer shortcut.
+#    Keep bolgenos-welcome autostart (can be toggled inside the app).
+systemctl disable bolgenos-live-setup.service 2>/dev/null || true
+rm -f /etc/systemd/system/bolgenos-live-setup.service
+rm -f /etc/systemd/system/multi-user.target.wants/bolgenos-live-setup.service
+rm -f /usr/local/bin/bolgenos-live-setup
+rm -f /etc/sudoers.d/99-bolgenos-live
+rm -f /etc/skel/Desktop/Install-BolgenOS.desktop
+
+cat > /etc/lightdm/lightdm.conf.d/10-bolgenos.conf <<'EOF'
+[Seat:*]
+greeter-session=lightdm-gtk-greeter
+user-session=mate
+EOF

@@ -1,0 +1,27 @@
+---
+componentName: bolgenos
+
+strings:
+  productName:         "BolgenOS"
+  shortProductName:    "BolgenOS"
+  version:             "rolling"
+  shortVersion:        "rolling"
+  versionedName:       "BolgenOS"
+  shortVersionedName:  "BolgenOS"
+  bootloaderEntryName: "BolgenOS"
+  productUrl:          "https://bolgenos.local/"
+  supportUrl:          "https://bolgenos.local/support"
+  knownIssuesUrl:      "https://bolgenos.local/issues"
+  releaseNotesUrl:     "https://bolgenos.local/releases"
+
+images:
+  productLogo:         "logo.svg"
+  productIcon:         "logo.svg"
+  productWelcome:      "welcome.svg"
+
+slideshow:               "show.qml"
+
+style:
+  SidebarBackground:     "#1a2a4a"
+  SidebarText:           "#ffffff"
+  SidebarTextSelect:     "#7cf3c6"

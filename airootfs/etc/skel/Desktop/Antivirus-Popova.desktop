@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Антивирус Попова
+Comment=Проверка системы на угрозы
+Exec=clamtk %F
+Icon=antivirus-popova
+Terminal=false
+Categories=System;Security;

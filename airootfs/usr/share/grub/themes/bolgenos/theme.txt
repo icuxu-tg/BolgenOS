@@ -1,0 +1,26 @@
+title-text: "BolgenOS"
+title-color: "#f4f7ff"
+desktop-image: "background.png"
+desktop-color: "#0b1020"
+terminal-font: "DejaVu Sans Mono Regular 12"
+
++ boot_menu {
+  left = 20%
+  top = 28%
+  width = 60%
+  height = 46%
+  item_color = "#cfe2ff"
+  selected_item_color = "#7cf3c6"
+  item_height = 32
+  item_padding = 8
+  item_spacing = 6
+}
+
++ label {
+  top = 84%
+  left = 0%
+  width = 100%
+  align = "center"
+  text = "Enter — Загрузить | E — Редактировать | C — Консоль GRUB"
+  color = "#94a3b8"
+}

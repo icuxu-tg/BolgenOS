@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Install BolgenOS
+Name[ru]=Установить BolgenOS
+Comment=Install BolgenOS to disk
+Exec=sh -c 'sudo env DISPLAY="$DISPLAY" XAUTHORITY="$XAUTHORITY" LANG="$LANG" calamares'
+Icon=system-software-install
+Terminal=false
+Categories=System;
+StartupNotify=true

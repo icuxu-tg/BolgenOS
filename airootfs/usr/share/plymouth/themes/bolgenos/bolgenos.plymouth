@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=BolgenOS
+Description=BolgenOS graphical boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/bolgenos
+ScriptFile=/usr/share/plymouth/themes/bolgenos/bolgenos.script

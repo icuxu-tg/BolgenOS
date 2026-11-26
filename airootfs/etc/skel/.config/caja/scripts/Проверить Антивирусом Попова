@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Caja context-menu script: scan selected files/directories with ClamAV ("Антивирус Попова").
+PATHS=()
+if [[ -n "${CAJA_SCRIPT_SELECTED_FILE_PATHS:-}" ]]; then
+  while IFS= read -r line; do
+    [[ -n "$line" ]] && PATHS+=("$line")
+  done <<< "$CAJA_SCRIPT_SELECTED_FILE_PATHS"
+elif [[ $# -gt 0 ]]; then
+  PATHS=("$@")
+fi
+
+if [[ ${#PATHS[@]} -eq 0 ]]; then
+  exit 0
+fi
+
+mate-terminal -- bash -c '
+  echo "=== Антивирус Попова: проверка выбранных объектов ==="
+  clamscan -r --bell "$@"
+  echo ""
+  echo "Проверка завершена. Нажмите Enter для закрытия..."
+  read -r
+' _ "${PATHS[@]}"

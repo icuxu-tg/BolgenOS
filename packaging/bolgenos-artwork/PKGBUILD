@@ -1,0 +1,22 @@
+pkgname=bolgenos-artwork
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Wallpapers, icons, Plymouth and GRUB themes for BolgenOS"
+arch=('any')
+license=('GPL3')
+
+package() {
+  local root="${startdir}/../.."
+  install -d "${pkgdir}/usr/share/bolgenos/backgrounds"
+  install -m644 "${root}/airootfs/usr/share/bolgenos/backgrounds/"*.svg "${pkgdir}/usr/share/bolgenos/backgrounds/"
+  install -Dm644 "${root}/airootfs/usr/share/bolgenos/startpage.html" "${pkgdir}/usr/share/bolgenos/startpage.html"
+
+  install -d "${pkgdir}/usr/share/icons/hicolor/scalable/apps"
+  install -m644 "${root}/airootfs/usr/share/icons/hicolor/scalable/apps/"*.svg "${pkgdir}/usr/share/icons/hicolor/scalable/apps/"
+
+  install -d "${pkgdir}/usr/share/plymouth/themes/bolgenos"
+  install -m644 "${root}/airootfs/usr/share/plymouth/themes/bolgenos/"* "${pkgdir}/usr/share/plymouth/themes/bolgenos/"
+
+  install -d "${pkgdir}/usr/share/grub/themes/bolgenos"
+  install -m644 "${root}/airootfs/usr/share/grub/themes/bolgenos/"* "${pkgdir}/usr/share/grub/themes/bolgenos/"
+}

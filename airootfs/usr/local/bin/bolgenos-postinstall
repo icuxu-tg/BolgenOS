@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Run by Calamares shellprocess inside target chroot after bootloader.
+systemctl enable NetworkManager.service || true
+
+if ! systemctl is-enabled sddm.service >/dev/null 2>&1 && ! systemctl is-enabled gdm.service >/dev/null 2>&1; then
+  systemctl enable lightdm.service || true
+fi
+
+# Ensure plymouth hook and BolgenOS splash theme in target initramfs.
+if [ -f /etc/mkinitcpio.conf ] && ! grep -q 'plymouth' /etc/mkinitcpio.conf; then
+  sed -i 's/\bkms\b/kms plymouth/' /etc/mkinitcpio.conf
+  if ! grep -q 'plymouth' /etc/mkinitcpio.conf; then
+    sed -i 's/\budev\b/udev plymouth/' /etc/mkinitcpio.conf
+  fi
+fi
+if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+  plymouth-set-default-theme -R bolgenos || mkinitcpio -P || true
+fi
+
+locale-gen || true
+gtk-update-icon-cache -f -t /usr/share/icons/hicolor >/dev/null 2>&1 || true
+
+if [ -d /etc/dconf/db/local.d ]; then
+  dconf update || true
+fi
+
+# Clean up installer configuration and helper scripts in installed system.
+rm -rf /etc/calamares
+rm -f /usr/local/bin/bolgenos-prepare-target
+rm -f /usr/local/bin/bolgenos-install-de
+rm -f /usr/local/bin/bolgenos-postinstall

@@ -1,0 +1,12 @@
+[Unit]
+Description=BolgenOS live session setup
+After=network-pre.target
+Before=display-manager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/bolgenos-live-setup
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

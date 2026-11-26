@@ -1,0 +1,11 @@
+NAME="BolgenOS"
+PRETTY_NAME="BolgenOS"
+ID=bolgenos
+ID_LIKE=arch
+BUILD_ID=rolling
+ANSI_COLOR="38;2;23;147;209"
+HOME_URL="https://bolgenos.local/"
+DOCUMENTATION_URL="https://bolgenos.local/docs"
+SUPPORT_URL="https://bolgenos.local/support"
+BUG_REPORT_URL="https://bolgenos.local/issues"
+LOGO=bolgenos

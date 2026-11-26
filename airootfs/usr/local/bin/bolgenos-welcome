@@ -1,0 +1,786 @@
+#!/usr/bin/env python3
+import os
+import platform
+import shlex
+import shutil
+import subprocess
+from pathlib import Path
+
+import gi
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
+from gi.repository import Gdk, GdkPixbuf, GLib, Gtk  # noqa: E402
+
+WALLPAPER_DIR = Path("/usr/share/bolgenos/backgrounds")
+LOGO_PATH = Path("/usr/share/icons/hicolor/scalable/apps/bolgenos-logo.svg")
+AUTOSTART_SRC = Path("/usr/share/applications/bolgenos-welcome.desktop")
+AUTOSTART_USER = Path.home() / ".config/autostart/bolgenos-welcome.desktop"
+
+WALLPAPER_LABELS = {
+    "bolgenos-default.svg": "BolgenOS Классика",
+    "bolgenos-neskuchnye.svg": "Нескучные обои",
+    "03-aurora-borealis.svg": "Северное сияние",
+    "04-synthwave-tagil.svg": "Синтвейв Тагил",
+    "05-minimal-arch-wave.svg": "Минимализм Arch",
+    "06-cyber-grid.svg": "Кибер-сетка",
+    "07-warm-sunset.svg": "Тёплый закат",
+    "08-emerald-glass.svg": "Изумрудное стекло",
+    "09-cosmos-nebula.svg": "Космос и туманность",
+    "10-light-clean.svg": "Светлая чистота",
+}
+
+CURATED_APPS = [
+    (
+        "Интернет и общение",
+        [
+            ("telegram-desktop", "Telegram Desktop", "Быстрый мессенджер"),
+            ("chromium", "Chromium", "Дополнительный браузер с открытым кодом"),
+            ("qbittorrent", "qBittorrent", "Лёгкий торрент-клиент"),
+        ],
+    ),
+    (
+        "Графика и мультимедиа",
+        [
+            ("gimp", "GIMP", "Редактор растровой графики"),
+            ("obs-studio", "OBS Studio", "Запись экрана и стриминг"),
+            ("audacity", "Audacity", "Редактор аудио"),
+        ],
+    ),
+    (
+        "Разработка и утилиты",
+        [
+            ("code", "Code - OSS", "Редактор кода (VS Code Open Source)"),
+            ("docker", "Docker", "Контейнеризация приложений"),
+            ("htop", "htop", "Монитор процессов в терминале"),
+        ],
+    ),
+    (
+        "Игры и совместимость",
+        [
+            ("steam", "Steam", "Игровая платформа Valve (multilib включён)"),
+            ("lutris", "Lutris", "Менеджер игр (Wine / Proton / эмуляторы)"),
+            ("wine", "Wine", "Запуск Windows-программ"),
+        ],
+    ),
+]
+
+CSS = b"""
+window.bolgenos-welcome {
+    background-color: #0f172a;
+    color: #e2e8f0;
+}
+.hero-box {
+    background: linear-gradient(135deg, #13213a, #1a334d);
+    border: 1px solid rgba(124, 243, 198, 0.28);
+    border-radius: 14px;
+    padding: 20px;
+}
+.card-box {
+    background-color: #162235;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 12px;
+    padding: 14px;
+}
+.accent-btn {
+    background-image: linear-gradient(90deg, #3b82f6, #10b981);
+    color: #ffffff;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+}
+.accent-btn:hover {
+    opacity: 0.92;
+}
+.pill-label {
+    background-color: rgba(124, 243, 198, 0.14);
+    color: #7cf3c6;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.muted {
+    color: #94a3b8;
+}
+.installed-badge {
+    color: #34d399;
+    font-weight: 700;
+}
+.missing-badge {
+    color: #94a3b8;
+}
+"""
+
+
+def is_live_session() -> bool:
+    return Path("/run/archiso").exists()
+
+
+def read_os_pretty_name() -> str:
+    os_release = Path("/etc/os-release")
+    if os_release.exists():
+        for line in os_release.read_text(errors="ignore").splitlines():
+            if line.startswith("PRETTY_NAME="):
+                return line.split("=", 1)[1].strip().strip('"')
+    return "BolgenOS"
+
+
+def read_mem_total_gb() -> str:
+    try:
+        for line in Path("/proc/meminfo").read_text().splitlines():
+            if line.startswith("MemTotal:"):
+                kb = int(line.split()[1])
+                return f"{kb / (1024 * 1024):.1f} ГБ"
+    except Exception:
+        pass
+    return "—"
+
+
+def read_cpu_model() -> str:
+    try:
+        for line in Path("/proc/cpuinfo").read_text(errors="ignore").splitlines():
+            if line.startswith("model name"):
+                return line.split(":", 1)[1].strip()
+    except Exception:
+        pass
+    return platform.machine()
+
+
+def detect_gpu_summary() -> str:
+    if not shutil.which("lspci"):
+        return "lspci не найден"
+    try:
+        out = subprocess.check_output(["lspci"], text=True, errors="ignore")
+        gpus = [
+            ln.split(": ", 1)[1]
+            for ln in out.splitlines()
+            if any(k in ln for k in ("VGA compatible controller", "3D controller", "Display controller"))
+        ]
+        return "; ".join(gpus) if gpus else "Не определено"
+    except Exception:
+        return "Не определено"
+
+
+def get_installed_packages() -> set[str]:
+    try:
+        out = subprocess.check_output(["pacman", "-Qq"], text=True)
+        return set(out.splitlines())
+    except Exception:
+        return set()
+
+
+def run_in_terminal(cmd: str) -> None:
+    full = f"{cmd}; echo ''; echo 'Готово. Нажмите Enter, чтобы закрыть окно...'; read -r"
+    if shutil.which("mate-terminal"):
+        subprocess.Popen(["mate-terminal", "--", "bash", "-c", full])
+    elif shutil.which("x-terminal-emulator"):
+        subprocess.Popen(["x-terminal-emulator", "-e", "bash", "-c", full])
+    else:
+        subprocess.Popen(["bash", "-c", cmd])
+
+
+def run_detached(cmd: list[str]) -> None:
+    subprocess.Popen(cmd, start_new_session=True)
+
+
+class BolgenOSWelcome(Gtk.Window):
+    def __init__(self) -> None:
+        super().__init__(title="Добро пожаловать в BolgenOS")
+        self.set_default_size(960, 660)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.get_style_context().add_class("bolgenos-welcome")
+
+        if LOGO_PATH.exists():
+            try:
+                self.set_icon_from_file(str(LOGO_PATH))
+            except Exception:
+                pass
+
+        self.installed_pkgs = get_installed_packages()
+        self.app_checks: dict[str, tuple[Gtk.CheckButton, Gtk.Label]] = {}
+
+        self._apply_css()
+        self._build_ui()
+
+    def _apply_css(self) -> None:
+        provider = Gtk.CssProvider()
+        provider.load_from_data(CSS)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        )
+
+    def _build_ui(self) -> None:
+        root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add(root)
+
+        self.stack = Gtk.Stack()
+        self.stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
+        self.stack.set_transition_duration(180)
+
+        header = Gtk.HeaderBar()
+        header.set_show_close_button(True)
+        header.set_title("BolgenOS Welcome")
+        header.set_subtitle("Принципиально новая ОС на базе Arch Linux")
+        switcher = Gtk.StackSwitcher()
+        switcher.set_stack(self.stack)
+        header.set_custom_title(switcher)
+        self.set_titlebar(header)
+
+        self.stack.add_titled(self._build_home_tab(), "home", "Главная")
+        self.stack.add_titled(self._build_wallpapers_tab(), "wallpapers", "Нескучные обои")
+        self.stack.add_titled(self._build_apps_tab(), "apps", "Программы")
+        self.stack.add_titled(self._build_tweaks_tab(), "tweaks", "Твики и драйверы")
+        self.stack.add_titled(self._build_about_tab(), "about", "О системе")
+
+        root.pack_start(self.stack, True, True, 0)
+
+        footer = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        footer.set_margin_start(16)
+        footer.set_margin_end(16)
+        footer.set_margin_top(10)
+        footer.set_margin_bottom(10)
+
+        autostart_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        autostart_lbl = Gtk.Label(label="Запускать при входе в систему")
+        self.autostart_switch = Gtk.Switch()
+        self.autostart_switch.set_active(self._is_autostart_enabled())
+        self.autostart_switch.connect("notify::active", self._on_autostart_toggled)
+        autostart_box.pack_start(self.autostart_switch, False, False, 0)
+        autostart_box.pack_start(autostart_lbl, False, False, 0)
+        footer.pack_start(autostart_box, False, False, 0)
+
+        self.status_label = Gtk.Label(label="")
+        self.status_label.get_style_context().add_class("muted")
+        footer.pack_start(self.status_label, True, True, 0)
+
+        close_btn = Gtk.Button(label="Закрыть")
+        close_btn.connect("clicked", lambda *_: self.close())
+        footer.pack_end(close_btn, False, False, 0)
+
+        root.pack_start(Gtk.Separator(), False, False, 0)
+        root.pack_start(footer, False, False, 0)
+
+    def _build_home_tab(self) -> Gtk.Widget:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        box.set_margin_start(24)
+        box.set_margin_end(24)
+        box.set_margin_top(20)
+        box.set_margin_bottom(20)
+
+        hero = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=18)
+        hero.get_style_context().add_class("hero-box")
+
+        if LOGO_PATH.exists():
+            try:
+                pb = GdkPixbuf.Pixbuf.new_from_file_at_scale(str(LOGO_PATH), 76, 76, True)
+                hero.pack_start(Gtk.Image.new_from_pixbuf(pb), False, False, 0)
+            except Exception:
+                pass
+
+        hero_text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        title = Gtk.Label()
+        title.set_markup("<span size='xx-large' weight='bold'>Добро пожаловать в BolgenOS</span>")
+        title.set_xalign(0)
+        sub = Gtk.Label(
+            label="Arch Linux с выбором рабочего стола (MATE, KDE Plasma, XFCE, Cinnamon, GNOME), нескучными обоями, OgenBrowse и Антивирусом Попова."
+        )
+        sub.set_line_wrap(True)
+        sub.set_xalign(0)
+        sub.get_style_context().add_class("muted")
+
+        mode_pill = Gtk.Label(
+            label="Режим Live ISO" if is_live_session() else "Установленная система"
+        )
+        mode_pill.get_style_context().add_class("pill-label")
+        mode_pill.set_halign(Gtk.Align.START)
+
+        hero_text.pack_start(title, False, False, 0)
+        hero_text.pack_start(sub, False, False, 0)
+        hero_text.pack_start(mode_pill, False, False, 0)
+        hero.pack_start(hero_text, True, True, 0)
+
+        if is_live_session():
+            install_btn = Gtk.Button(label="Установить BolgenOS")
+            install_btn.get_style_context().add_class("accent-btn")
+            install_btn.set_valign(Gtk.Align.CENTER)
+            install_btn.connect("clicked", self._launch_calamares)
+            hero.pack_end(install_btn, False, False, 0)
+
+        box.pack_start(hero, False, False, 0)
+
+        grid = Gtk.Grid(column_spacing=14, row_spacing=14, column_homogeneous=True)
+        actions = [
+            (
+                "OgenBrowse",
+                "Фирменный браузер на базе Firefox с uBlock Origin и стартовой страницей",
+                "Открыть браузер",
+                lambda *_: run_detached(["firefox"]),
+            ),
+            (
+                "Антивирус Попова",
+                "Сканер ClamTk + проверка файлов из контекстного меню Caja",
+                "Запустить сканер",
+                lambda *_: run_detached(["clamtk"]),
+            ),
+            (
+                "Нескучные обои",
+                "10 векторных обоев и настройка экрана входа LightDM",
+                "Выбрать обои",
+                lambda *_: self.stack.set_visible_child_name("wallpapers"),
+            ),
+            (
+                "Терминал и Fastfetch",
+                "Открыть терминал с информацией о системе",
+                "Открыть терминал",
+                lambda *_: run_detached(
+                    ["mate-terminal", "--", "bash", "-c", "fastfetch; exec bash"]
+                ),
+            ),
+        ]
+
+        for idx, (heading, desc, btn_label, cb) in enumerate(actions):
+            card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+            card.get_style_context().add_class("card-box")
+            h = Gtk.Label()
+            h.set_markup(f"<span size='large' weight='bold'>{GLib.markup_escape_text(heading)}</span>")
+            h.set_xalign(0)
+            d = Gtk.Label(label=desc)
+            d.set_line_wrap(True)
+            d.set_xalign(0)
+            d.get_style_context().add_class("muted")
+            b = Gtk.Button(label=btn_label)
+            b.set_halign(Gtk.Align.START)
+            b.connect("clicked", cb)
+            card.pack_start(h, False, False, 0)
+            card.pack_start(d, True, True, 0)
+            card.pack_start(b, False, False, 0)
+            grid.attach(card, idx % 2, idx // 2, 1, 1)
+
+        box.pack_start(grid, True, True, 0)
+
+        links_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        links_lbl = Gtk.Label(label="Полезные ссылки:")
+        links_lbl.get_style_context().add_class("muted")
+        links_box.pack_start(links_lbl, False, False, 0)
+        for name, url in [
+            ("Arch Wiki", "https://wiki.archlinux.org/"),
+            ("Репозитории Arch", "https://archlinux.org/packages/"),
+            ("AUR", "https://aur.archlinux.org/"),
+        ]:
+            lb = Gtk.LinkButton.new_with_label(url, name)
+            links_box.pack_start(lb, False, False, 0)
+        box.pack_end(links_box, False, False, 0)
+
+        return box
+
+    def _build_wallpapers_tab(self) -> Gtk.Widget:
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        outer.set_margin_start(18)
+        outer.set_margin_end(18)
+        outer.set_margin_top(14)
+        outer.set_margin_bottom(14)
+
+        top = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        info = Gtk.Label(
+            label="Нажмите на любые «нескучные обои», чтобы сразу применить их на рабочий стол (или на экран входа)."
+        )
+        info.set_xalign(0)
+        info.get_style_context().add_class("muted")
+        top.pack_start(info, True, True, 0)
+        outer.pack_start(top, False, False, 0)
+
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        flow = Gtk.FlowBox()
+        flow.set_valign(Gtk.Align.START)
+        flow.set_max_children_per_line(3)
+        flow.set_min_children_per_line(2)
+        flow.set_column_spacing(14)
+        flow.set_row_spacing(14)
+        flow.set_selection_mode(Gtk.SelectionMode.NONE)
+
+        files = sorted(WALLPAPER_DIR.glob("*.svg")) if WALLPAPER_DIR.exists() else []
+        for wp in files:
+            card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+            card.get_style_context().add_class("card-box")
+
+            try:
+                pb = GdkPixbuf.Pixbuf.new_from_file_at_scale(str(wp), 240, 135, True)
+                img = Gtk.Image.new_from_pixbuf(pb)
+                card.pack_start(img, False, False, 0)
+            except Exception:
+                pass
+
+            label_text = WALLPAPER_LABELS.get(wp.name, wp.stem)
+            lbl = Gtk.Label(label=label_text)
+            lbl.set_xalign(0)
+            card.pack_start(lbl, False, False, 0)
+
+            btns = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            apply_btn = Gtk.Button(label="На рабочий стол")
+            apply_btn.get_style_context().add_class("accent-btn")
+            apply_btn.connect("clicked", self._apply_wallpaper, wp)
+            greeter_btn = Gtk.Button(label="На экран входа")
+            greeter_btn.connect("clicked", self._apply_greeter_wallpaper, wp)
+            btns.pack_start(apply_btn, True, True, 0)
+            btns.pack_start(greeter_btn, False, False, 0)
+            card.pack_start(btns, False, False, 0)
+
+            flow.add(card)
+
+        scroll.add(flow)
+        outer.pack_start(scroll, True, True, 0)
+        return outer
+
+    def _build_apps_tab(self) -> Gtk.Widget:
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        outer.set_margin_start(18)
+        outer.set_margin_end(18)
+        outer.set_margin_top(14)
+        outer.set_margin_bottom(14)
+
+        # Quick search/install bar (pacman + yay)
+        search_card = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        search_card.get_style_context().add_class("card-box")
+        self.pkg_entry = Gtk.Entry()
+        self.pkg_entry.set_placeholder_text("Имя пакета или запрос для поиска (pacman / yay)...")
+        self.pkg_entry.connect("activate", self._search_package)
+        search_btn = Gtk.Button(label="Найти")
+        search_btn.connect("clicked", self._search_package)
+        install_one_btn = Gtk.Button(label="Установить через yay")
+        install_one_btn.connect("clicked", self._install_custom_package)
+        octopi_btn = Gtk.Button(label="Магазин Octopi (AUR)")
+        octopi_btn.connect("clicked", lambda *_: run_in_terminal("yay -S --needed octopi"))
+        search_card.pack_start(self.pkg_entry, True, True, 0)
+        search_card.pack_start(search_btn, False, False, 0)
+        search_card.pack_start(install_one_btn, False, False, 0)
+        search_card.pack_start(octopi_btn, False, False, 0)
+        outer.pack_start(search_card, False, False, 0)
+
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+
+        for cat_name, items in CURATED_APPS:
+            card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+            card.get_style_context().add_class("card-box")
+            cat_lbl = Gtk.Label()
+            cat_lbl.set_markup(f"<span size='large' weight='bold'>{GLib.markup_escape_text(cat_name)}</span>")
+            cat_lbl.set_xalign(0)
+            card.pack_start(cat_lbl, False, False, 0)
+
+            for pkg, title, desc in items:
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+                chk = Gtk.CheckButton(label=f"{title} ({pkg}) — {desc}")
+                is_inst = pkg in self.installed_pkgs
+                chk.set_sensitive(not is_inst)
+                badge = Gtk.Label(label="Установлен" if is_inst else "Доступен")
+                badge.get_style_context().add_class(
+                    "installed-badge" if is_inst else "missing-badge"
+                )
+                row.pack_start(chk, True, True, 0)
+                row.pack_end(badge, False, False, 0)
+                card.pack_start(row, False, False, 0)
+                self.app_checks[pkg] = (chk, badge)
+
+            list_box.pack_start(card, False, False, 0)
+
+        scroll.add(list_box)
+        outer.pack_start(scroll, True, True, 0)
+
+        action_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        refresh_btn = Gtk.Button(label="Обновить статус")
+        refresh_btn.connect("clicked", lambda *_: self._refresh_apps_status())
+        install_sel_btn = Gtk.Button(label="Установить выбранные пакеты")
+        install_sel_btn.get_style_context().add_class("accent-btn")
+        install_sel_btn.connect("clicked", self._install_selected_apps)
+        action_bar.pack_start(refresh_btn, False, False, 0)
+        action_bar.pack_end(install_sel_btn, False, False, 0)
+        outer.pack_start(action_bar, False, False, 0)
+        return outer
+
+    def _build_tweaks_tab(self) -> Gtk.Widget:
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        outer.set_margin_start(18)
+        outer.set_margin_end(18)
+        outer.set_margin_top(14)
+        outer.set_margin_bottom(14)
+
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+
+        maint_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        maint_card.get_style_context().add_class("card-box")
+        m_title = Gtk.Label()
+        m_title.set_markup("<span size='large' weight='bold'>Обслуживание и драйверы</span>")
+        m_title.set_xalign(0)
+        maint_card.pack_start(m_title, False, False, 0)
+
+        grid = Gtk.Grid(column_spacing=10, row_spacing=10, column_homogeneous=True)
+        tweaks = [
+            ("Обновить систему (pacman -Syu)", lambda *_: run_in_terminal("sudo pacman -Syu")),
+            ("Обновить включая AUR (yay -Syu)", lambda *_: run_in_terminal("yay -Syu")),
+            (
+                "Драйвер NVIDIA (автодетект)",
+                lambda *_: self._install_nvidia_autodetect(),
+            ),
+            (
+                "Подобрать быстрые зеркала",
+                lambda *_: run_in_terminal(
+                    "sudo reflector --latest 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist"
+                ),
+            ),
+            ("Обновить базы Антивируса Попова", lambda *_: run_in_terminal("sudo freshclam")),
+            (
+                "Очистить кэш пакетов (paccache)",
+                lambda *_: run_in_terminal("sudo paccache -r; sudo pacman -Sc --noconfirm"),
+            ),
+            (
+                "Снять блокировку pacman (db.lck)",
+                lambda *_: run_in_terminal("sudo rm -f /var/lib/pacman/db.lck && echo 'Блокировка снята'"),
+            ),
+            (
+                "Снэпшоты системы (Timeshift)",
+                lambda *_: run_detached(
+                    ["sudo", "env", f"DISPLAY={os.environ.get('DISPLAY', ':0')}", f"XAUTHORITY={os.environ.get('XAUTHORITY', '')}", "timeshift-gtk"]
+                ),
+            ),
+        ]
+        for idx, (label, cb) in enumerate(tweaks):
+            b = Gtk.Button(label=label)
+            b.connect("clicked", cb)
+            grid.attach(b, idx % 2, idx // 2, 1, 1)
+        maint_card.pack_start(grid, False, False, 0)
+        content.pack_start(maint_card, False, False, 0)
+
+        theme_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        theme_card.get_style_context().add_class("card-box")
+        t_title = Gtk.Label()
+        t_title.set_markup("<span size='large' weight='bold'>Внешний вид и устройства</span>")
+        t_title.set_xalign(0)
+        theme_card.pack_start(t_title, False, False, 0)
+
+        t_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        dark_btn = Gtk.Button(label="Тёмная тема (Materia-dark)")
+        dark_btn.connect("clicked", lambda *_: self._set_theme(dark=True))
+        light_btn = Gtk.Button(label="Светлая тема (Materia)")
+        light_btn.connect("clicked", lambda *_: self._set_theme(dark=False))
+        t_row.pack_start(dark_btn, True, True, 0)
+        t_row.pack_start(light_btn, True, True, 0)
+        theme_card.pack_start(t_row, False, False, 0)
+
+        tools_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        for label, cmd in [
+            ("Файрвол (GUFW)", ["gufw"]),
+            ("Принтеры (CUPS)", ["system-config-printer"]),
+            ("Bluetooth", ["blueman-manager"]),
+            ("Диски (GParted)", ["sudo", "env", f"DISPLAY={os.environ.get('DISPLAY', ':0')}", f"XAUTHORITY={os.environ.get('XAUTHORITY', '')}", "gparted"]),
+        ]:
+            b = Gtk.Button(label=label)
+            b.connect("clicked", lambda _, c=cmd: run_detached(c))
+            tools_row.pack_start(b, True, True, 0)
+        theme_card.pack_start(tools_row, False, False, 0)
+        content.pack_start(theme_card, False, False, 0)
+
+        scroll.add(content)
+        outer.pack_start(scroll, True, True, 0)
+        return outer
+
+    def _build_about_tab(self) -> Gtk.Widget:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        box.set_margin_start(24)
+        box.set_margin_end(24)
+        box.set_margin_top(20)
+        box.set_margin_bottom(20)
+
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        card.get_style_context().add_class("card-box")
+        info_lines = [
+            ("Система:", read_os_pretty_name()),
+            ("Ядро Linux:", platform.release()),
+            ("Архитектура:", platform.machine()),
+            ("Процессор:", read_cpu_model()),
+            ("Видеокарта:", detect_gpu_summary()),
+            ("Оперативная память:", read_mem_total_gb()),
+            ("Окружение:", os.environ.get("XDG_CURRENT_DESKTOP", "MATE")),
+        ]
+        for k, v in info_lines:
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+            kl = Gtk.Label()
+            kl.set_markup(f"<b>{GLib.markup_escape_text(k)}</b>")
+            kl.set_xalign(0)
+            kl.set_width_chars(20)
+            vl = Gtk.Label(label=v)
+            vl.set_xalign(0)
+            vl.set_line_wrap(True)
+            row.pack_start(kl, False, False, 0)
+            row.pack_start(vl, True, True, 0)
+            card.pack_start(row, False, False, 0)
+        box.pack_start(card, False, False, 0)
+
+        tips = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        tips.get_style_context().add_class("card-box")
+        th = Gtk.Label()
+        th.set_markup("<span size='large' weight='bold'>Памятка BolgenOS</span>")
+        th.set_xalign(0)
+        body = Gtk.Label(
+            label=(
+                "• Переключение раскладки: Alt + Shift (RU / US)\n"
+                "• Live-пользователь: popov (sudo без пароля)\n"
+                "• Установка программ: вкладка «Программы» или pacman / yay\n"
+                "• Проверка файлов из Caja: ПКМ → Сценарии → «Проверить Антивирусом Попова»\n"
+                "• Снэпшоты Btrfs: Timeshift / Snapper + автоматическое меню отката в GRUB (grub-btrfs)"
+            )
+        )
+        body.set_xalign(0)
+        body.set_line_wrap(True)
+        body.get_style_context().add_class("muted")
+        tips.pack_start(th, False, False, 0)
+        tips.pack_start(body, False, False, 0)
+        box.pack_start(tips, False, False, 0)
+        return box
+
+    def _launch_calamares(self, *_) -> None:
+        display = os.environ.get("DISPLAY", ":0")
+        xauth = os.environ.get("XAUTHORITY", "")
+        lang = os.environ.get("LANG", "ru_RU.UTF-8")
+        run_detached(
+            ["sudo", "env", f"DISPLAY={display}", f"XAUTHORITY={xauth}", f"LANG={lang}", "calamares"]
+        )
+
+    def _apply_wallpaper(self, _btn: Gtk.Button, path: Path) -> None:
+        subprocess.run(
+            ["gsettings", "set", "org.mate.background", "picture-filename", str(path)],
+            check=False,
+        )
+        subprocess.run(
+            ["gsettings", "set", "org.mate.background", "picture-options", "stretched"],
+            check=False,
+        )
+        name = WALLPAPER_LABELS.get(path.name, path.stem)
+        self.status_label.set_text(f"Обои применены: {name}")
+
+    def _apply_greeter_wallpaper(self, _btn: Gtk.Button, path: Path) -> None:
+        cmd = (
+            f"sudo sed -i 's|^background=.*|background={path}|' "
+            "/etc/lightdm/lightdm-gtk-greeter.conf"
+        )
+        run_in_terminal(cmd)
+        self.status_label.set_text(f"Экран входа обновляется: {path.name}")
+
+    def _search_package(self, *_) -> None:
+        query = self.pkg_entry.get_text().strip()
+        if not query:
+            self.status_label.set_text("Введите имя пакета для поиска")
+            return
+        q = shlex.quote(query)
+        run_in_terminal(f"yay -Ss {q}")
+
+    def _install_custom_package(self, *_) -> None:
+        pkg = self.pkg_entry.get_text().strip()
+        if not pkg:
+            self.status_label.set_text("Введите имя пакета для установки")
+            return
+        q = " ".join(shlex.quote(p) for p in pkg.split())
+        run_in_terminal(f"yay -S --needed {q}")
+
+    def _install_nvidia_autodetect(self, *_) -> None:
+        cmd = (
+            "echo '=== Обнаруженные видеокарты ==='; "
+            "lspci | grep -iE 'vga|3d|display'; echo ''; "
+            "if lspci | grep -qi nvidia; then "
+            "  echo 'Обнаружена видеокарта NVIDIA. Установка nvidia-open-dkms + nvidia-utils + lib32-nvidia-utils...'; "
+            "  sudo pacman -Syu --needed linux-headers nvidia-open-dkms nvidia-utils lib32-nvidia-utils nvidia-settings; "
+            "else "
+            "  echo 'Дискретная NVIDIA не обнаружена. Для AMD и Intel уже работают открытые драйверы Mesa.'; "
+            "fi"
+        )
+        run_in_terminal(cmd)
+
+    def _refresh_apps_status(self) -> None:
+        self.installed_pkgs = get_installed_packages()
+        for pkg, (chk, badge) in self.app_checks.items():
+            is_inst = pkg in self.installed_pkgs
+            chk.set_sensitive(not is_inst)
+            if is_inst:
+                chk.set_active(False)
+            badge.set_text("Установлен" if is_inst else "Доступен")
+            ctx = badge.get_style_context()
+            ctx.remove_class("installed-badge")
+            ctx.remove_class("missing-badge")
+            ctx.add_class("installed-badge" if is_inst else "missing-badge")
+        self.status_label.set_text("Статус пакетов обновлён")
+
+    def _install_selected_apps(self, *_) -> None:
+        selected = [
+            pkg
+            for pkg, (chk, _) in self.app_checks.items()
+            if chk.get_active() and chk.get_sensitive()
+        ]
+        if not selected:
+            self.status_label.set_text("Не выбрано ни одного нового пакета")
+            return
+        pkgs_str = " ".join(selected)
+        run_in_terminal(f"sudo pacman -Sy --needed {pkgs_str}")
+        self.status_label.set_text(f"Установка: {pkgs_str}")
+
+    def _set_theme(self, dark: bool) -> None:
+        gtk_theme = "Materia-dark" if dark else "Materia"
+        icon_theme = "Papirus-Dark" if dark else "Papirus"
+        subprocess.run(
+            ["gsettings", "set", "org.mate.interface", "gtk-theme", gtk_theme],
+            check=False,
+        )
+        subprocess.run(
+            ["gsettings", "set", "org.mate.Marco.general", "theme", gtk_theme],
+            check=False,
+        )
+        subprocess.run(
+            ["gsettings", "set", "org.mate.interface", "icon-theme", icon_theme],
+            check=False,
+        )
+        self.status_label.set_text(f"Тема переключена: {gtk_theme}")
+
+    def _is_autostart_enabled(self) -> bool:
+        if not AUTOSTART_USER.exists():
+            return False
+        text = AUTOSTART_USER.read_text(errors="ignore")
+        return "Hidden=true" not in text
+
+    def _on_autostart_toggled(self, switch: Gtk.Switch, _pspec) -> None:
+        AUTOSTART_USER.parent.mkdir(parents=True, exist_ok=True)
+        enabled = switch.get_active()
+        if AUTOSTART_SRC.exists():
+            content = AUTOSTART_SRC.read_text(errors="ignore")
+        else:
+            content = (
+                "[Desktop Entry]\n"
+                "Version=1.0\n"
+                "Type=Application\n"
+                "Name=BolgenOS Welcome\n"
+                "Exec=/usr/local/bin/bolgenos-welcome\n"
+                "Icon=bolgenos-logo\n"
+                "Terminal=false\n"
+            )
+        lines = [ln for ln in content.splitlines() if not ln.startswith("Hidden=")]
+        lines.append(f"Hidden={'false' if enabled else 'true'}")
+        AUTOSTART_USER.write_text("\n".join(lines) + "\n")
+        self.status_label.set_text(
+            "Автозапуск включён" if enabled else "Автозапуск отключён"
+        )
+
+
+def main() -> None:
+    win = BolgenOSWelcome()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

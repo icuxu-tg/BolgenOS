@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OgenBrowse
+Comment=Browse the Web
+Exec=firefox %u
+Icon=ogenbrowse
+Terminal=false
+Categories=Network;WebBrowser;

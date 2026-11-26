@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OgenBrowse — BolgenOS</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: "DejaVu Sans", system-ui, sans-serif;
+      background: linear-gradient(135deg, #0b1020, #1a2a4a 55%, #1f4e5f);
+      color: #f4f7ff;
+    }
+    .card {
+      width: min(680px, 90vw);
+      padding: 36px;
+      border-radius: 20px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(124, 243, 198, 0.25);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+    h1 { margin: 0 0 8px; font-size: 2rem; }
+    .sub { margin: 0 0 24px; color: #9ec5fe; }
+    form { display: flex; gap: 10px; margin-bottom: 24px; }
+    input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: #f8fafc;
+      font-size: 1rem;
+    }
+    button {
+      padding: 12px 20px;
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #74a8ff, #7cf3c6);
+      color: #0b1020;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .links { display: flex; flex-wrap: wrap; gap: 12px; }
+    a {
+      color: #cfe2ff;
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    a:hover { background: rgba(124, 243, 198, 0.18); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>OgenBrowse</h1>
+    <p class="sub">Браузер BolgenOS · Принципиально новая ОС на базе Arch Linux</p>
+    <form action="https://duckduckgo.com/" method="get">
+      <input type="text" name="q" placeholder="Поиск в интернете..." autofocus>
+      <button type="submit">Найти</button>
+    </form>
+    <div class="links">
+      <a href="https://wiki.archlinux.org/">Arch Wiki</a>
+      <a href="https://archlinux.org/packages/">Пакеты Arch</a>
+      <a href="https://aur.archlinux.org/">AUR</a>
+    </div>
+  </main>
+</body>
+</html>

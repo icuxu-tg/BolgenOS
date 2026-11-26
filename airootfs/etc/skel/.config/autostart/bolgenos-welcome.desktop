@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=BolgenOS Welcome
+Name[ru]=Добро пожаловать в BolgenOS
+Exec=/usr/local/bin/bolgenos-welcome
+Icon=bolgenos-logo
+Terminal=false
+X-MATE-Autostart-enabled=true

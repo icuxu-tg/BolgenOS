@@ -1,0 +1,39 @@
+[org/mate/desktop/background]
+picture-filename='/usr/share/bolgenos/backgrounds/bolgenos-default.svg'
+picture-options='stretched'
+
+[org/mate/desktop/interface]
+gtk-theme='Materia-dark'
+icon-theme='Papirus-Dark'
+font-name='Inter 10'
+document-font-name='Inter 10'
+monospace-font-name='JetBrains Mono 10'
+
+[org/mate/marco/general]
+theme='Materia-dark'
+compositing-manager=false
+
+[org/mate/panel/general]
+default-layout='bolgenos'
+
+[org/mate/desktop/font-rendering]
+antialiasing='rgba'
+hinting='slight'
+rgba-order='rgb'
+
+[org/mate/desktop/peripherals/keyboard/kbd]
+layouts=['us','ru']
+options=['grp\tgrp:alt_shift_toggle']
+
+[org/mate/screensaver]
+lock-enabled=false
+
+[net/launchpad/plank/docks/dock1]
+alignment='center'
+hide-mode='intelligent'
+icon-size=44
+position='bottom'
+theme='Transparent'
+zoom-enabled=true
+zoom-percent=125
+dock-items=['ogenbrowse.dockitem', 'antivirus-popova.dockitem', 'caja.dockitem', 'mate-terminal.dockitem', 'bolgenos-welcome.dockitem']

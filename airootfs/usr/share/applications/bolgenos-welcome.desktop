@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=BolgenOS Welcome
+Name[ru]=Добро пожаловать в BolgenOS
+Comment=Быстрый запуск установщика и утилит BolgenOS
+Exec=/usr/local/bin/bolgenos-welcome
+Icon=bolgenos-logo
+Terminal=false
+Categories=System;
+StartupNotify=true

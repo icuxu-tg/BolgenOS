@@ -1,0 +1,18 @@
+pkgname=bolgenos-settings
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Desktop, browser policies, dconf, zram and compositor defaults for BolgenOS"
+arch=('any')
+license=('GPL3')
+depends=('dconf' 'plank' 'picom' 'zram-generator')
+
+package() {
+  local root="${startdir}/../.."
+  install -Dm644 "${root}/airootfs/etc/dconf/db/local.d/00-bolgenos" "${pkgdir}/etc/dconf/db/local.d/00-bolgenos"
+  install -Dm644 "${root}/airootfs/etc/dconf/profile/user" "${pkgdir}/etc/dconf/profile/user"
+  install -Dm644 "${root}/airootfs/etc/firefox/policies/policies.json" "${pkgdir}/etc/firefox/policies/policies.json"
+  install -Dm644 "${root}/airootfs/etc/xdg/picom.conf" "${pkgdir}/etc/xdg/picom.conf"
+  install -Dm644 "${root}/airootfs/etc/systemd/zram-generator.conf" "${pkgdir}/etc/systemd/zram-generator.conf"
+  install -Dm644 "${root}/airootfs/usr/share/mate-panel/layouts/bolgenos.layout" "${pkgdir}/usr/share/mate-panel/layouts/bolgenos.layout"
+  install -Dm644 "${root}/airootfs/etc/plymouth/plymouthd.conf" "${pkgdir}/etc/plymouth/plymouthd.conf"
+}

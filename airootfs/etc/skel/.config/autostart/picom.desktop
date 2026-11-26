@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Picom Compositor
+Exec=picom --config /etc/xdg/picom.conf -b
+OnlyShowIn=MATE;
+NoDisplay=true
+X-MATE-Autostart-enabled=true

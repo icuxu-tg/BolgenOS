@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="swbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#120428"/>
+      <stop offset="55%" stop-color="#2b1055"/>
+      <stop offset="100%" stop-color="#120624"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="55%" stop-color="#fb7185"/>
+      <stop offset="100%" stop-color="#c026d3"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#swbg)"/>
+  <circle cx="960" cy="480" r="220" fill="url(#sun)"/>
+  <g fill="#230b42">
+    <rect x="720" y="455" width="480" height="10"/>
+    <rect x="720" y="485" width="480" height="14"/>
+    <rect x="720" y="520" width="480" height="18"/>
+    <rect x="720" y="560" width="480" height="24"/>
+  </g>
+  <path d="M0 640 L260 510 L480 610 L760 470 L980 600 L1240 480 L1520 600 L1760 500 L1920 620 L1920 660 L0 660 Z" fill="#17062e"/>
+  <rect x="0" y="660" width="1920" height="420" fill="#0d031c"/>
+  <g stroke="#22d3ee" stroke-opacity="0.35" stroke-width="2">
+    <line x1="0" y1="660" x2="1920" y2="660"/>
+    <line x1="0" y1="700" x2="1920" y2="700"/>
+    <line x1="0" y1="755" x2="1920" y2="755"/>
+    <line x1="0" y1="830" x2="1920" y2="830"/>
+    <line x1="0" y1="935" x2="1920" y2="935"/>
+    <line x1="960" y1="660" x2="960" y2="1080"/>
+    <line x1="840" y1="660" x2="540" y2="1080"/>
+    <line x1="720" y1="660" x2="120" y2="1080"/>
+    <line x1="1080" y1="660" x2="1380" y2="1080"/>
+    <line x1="1200" y1="660" x2="1800" y2="1080"/>
+  </g>
+</svg>

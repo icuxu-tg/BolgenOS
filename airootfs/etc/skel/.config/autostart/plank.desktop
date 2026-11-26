@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Plank Dock
+Exec=plank
+OnlyShowIn=MATE;
+NoDisplay=true
+X-MATE-Autostart-enabled=true

@@ -1,0 +1,14 @@
+pkgname=bolgenos-welcome
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="GTK3 welcome and configuration tool for BolgenOS"
+arch=('any')
+license=('GPL3')
+depends=('python' 'python-gobject' 'gtk3' 'mate-terminal' 'fastfetch')
+
+package() {
+  local root="${startdir}/../.."
+  install -Dm755 "${root}/airootfs/usr/local/bin/bolgenos-welcome" "${pkgdir}/usr/local/bin/bolgenos-welcome"
+  install -Dm644 "${root}/airootfs/usr/share/applications/bolgenos-welcome.desktop" "${pkgdir}/usr/share/applications/bolgenos-welcome.desktop"
+  install -Dm644 "${root}/airootfs/usr/share/bolgenos/ascii-logo.txt" "${pkgdir}/usr/share/bolgenos/ascii-logo.txt"
+}
