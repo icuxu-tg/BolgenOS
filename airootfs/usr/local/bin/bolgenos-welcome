@@ -726,7 +726,7 @@ class BolgenOSWelcome(Gtk.Window):
             self.status_label.set_text("Не выбрано ни одного нового пакета")
             return
         pkgs_str = " ".join(selected)
-        run_in_terminal(f"sudo pacman -Sy --needed {pkgs_str}")
+        run_in_terminal(f"sudo pacman -Syu --needed {pkgs_str}")
         self.status_label.set_text(f"Установка: {pkgs_str}")
 
     def _set_theme(self, dark: bool) -> None:

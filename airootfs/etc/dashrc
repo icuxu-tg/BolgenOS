@@ -1,0 +1,8 @@
+# /etc/dashrc — системные настройки BolgenOS Dash Shell
+alias ls="ls --color=auto"
+alias ll="ls -la --color=auto"
+alias la="ls -A --color=auto"
+alias grep="grep --color=auto"
+alias cls="clear"
+alias ff="fastfetch"
+alias up="sudo pacman -Syu"

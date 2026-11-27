@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=BolgenOS Updater
+Name[ru]=Проверка обновлений BolgenOS
+Comment=Check for BolgenOS updates against GitHub Releases
+Comment[ru]=Проверка обновлений BolgenOS при запуске системы
+Exec=/usr/local/bin/bolgenos-updater
+Icon=system-software-update
+Terminal=false
+StartupNotify=false
+X-MATE-Autostart-enabled=true
+X-GNOME-Autostart-Delay=2

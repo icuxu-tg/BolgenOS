@@ -1,4 +1,4 @@
-# BolgenOS
+# BolgenOS (archiso profile)
 
 Arch-based live ISO + installer profile for **BolgenOS** (`bolgenos`) — «принципиально новой ОС» с нескучными обоями, OgenBrowse и Антивирусом Попова.
 

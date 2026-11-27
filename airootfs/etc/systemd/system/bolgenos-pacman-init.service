@@ -1,0 +1,11 @@
+[Unit]
+Description=Initialize BolgenOS pacman mirrorlist and GPG keyring
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/bolgenos-pacman-init
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

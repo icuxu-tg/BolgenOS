@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Run by Calamares shellprocess inside target chroot after bootloader.
 systemctl enable NetworkManager.service || true
+systemctl enable bolgenos-pacman-init.service || true
 
 if ! systemctl is-enabled sddm.service >/dev/null 2>&1 && ! systemctl is-enabled gdm.service >/dev/null 2>&1; then
   systemctl enable lightdm.service || true
@@ -31,3 +32,7 @@ rm -rf /etc/calamares
 rm -f /usr/local/bin/bolgenos-prepare-target
 rm -f /usr/local/bin/bolgenos-install-de
 rm -f /usr/local/bin/bolgenos-postinstall
+
+if [ -f /etc/shells ] && ! grep -qxF '/usr/local/bin/dash-shell' /etc/shells; then
+  printf '%s\n' '/usr/local/bin/dash-shell' >> /etc/shells
+fi

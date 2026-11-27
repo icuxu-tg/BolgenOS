@@ -7,6 +7,24 @@ set -euo pipefail
 
 PROFILE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 OUT_DIR="${PROFILE_DIR}/out"
+RELEASE_HASH_FILE="${PROFILE_DIR}/airootfs/etc/bolgenos-release.sha256"
+
+mkdir -p "$(dirname -- "$RELEASE_HASH_FILE")" "$OUT_DIR"
+
+# Compute deterministic SHA256 of the config tree before packing airootfs.
+RELEASE_HASH="$(
+  cd "$PROFILE_DIR"
+  find airootfs packages.x86_64 profiledef.sh -type f \
+    ! -path 'airootfs/etc/bolgenos-release.sha256' \
+    ! -path '*/__pycache__/*' \
+    ! -name '*.pyc' \
+    -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}'
+)"
+
+printf '%s\n' "$RELEASE_HASH" > "$RELEASE_HASH_FILE"
+printf '%s\n' "$RELEASE_HASH" > "${PROFILE_DIR}/RELEASE_SHA256.txt"
+printf '%s\n' "$RELEASE_HASH" > "${OUT_DIR}/RELEASE_SHA256.txt"
+echo "Release config SHA256: $RELEASE_HASH"
 
 "${PROFILE_DIR}/build.sh"
 

@@ -1,5 +1,6 @@
 # Base
 base
+archlinux-keyring
 linux
 linux-firmware
 intel-ucode
@@ -87,6 +88,8 @@ fastfetch
 python
 python-gobject
 zenity
+curl
+jq
 
 # Desktop: MATE + Plank + LightDM + Themes
 xorg-server

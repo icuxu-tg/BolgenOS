@@ -37,3 +37,10 @@ theme='Transparent'
 zoom-enabled=true
 zoom-percent=125
 dock-items=['ogenbrowse.dockitem', 'antivirus-popova.dockitem', 'caja.dockitem', 'mate-terminal.dockitem', 'bolgenos-welcome.dockitem']
+
+[org/mate/terminal/profiles/default]
+use-custom-command=true
+custom-command='/usr/local/bin/dash-shell'
+font='JetBrains Mono 11'
+use-system-font=false
+scrollback-lines=5000

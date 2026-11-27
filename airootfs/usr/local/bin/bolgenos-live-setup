@@ -31,3 +31,7 @@ gtk-update-icon-cache -f -t /usr/share/icons/hicolor >/dev/null 2>&1 || true
 if [ -d /etc/dconf/db/local.d ]; then
   dconf update || true
 fi
+
+if [ -f /etc/shells ] && ! grep -qxF '/usr/local/bin/dash-shell' /etc/shells; then
+  printf '%s\n' '/usr/local/bin/dash-shell' >> /etc/shells
+fi
