@@ -17,11 +17,11 @@
 
 | Рабочий стол (MATE + Plank) | Fastfetch и OgenBrowse |
 | :---: | :---: |
-| ![Рабочий стол BolgenOS](docs/screenshots/desktop.png) | ![Fastfetch и OgenBrowse](docs/screenshots/fastfetch-browser.png) |
+| ![Рабочий стол BolgenOS](docs/screenshots/01-desktop.png) | ![Fastfetch и OgenBrowse](docs/screenshots/02-fastfetch-ogenbrowse.png) |
 
 | Уведомление об обновлении (SHA256) | Интерактивное обновление в терминале |
 | :---: | :---: |
-| ![Окно обновления BolgenOS](docs/screenshots/updater-dialog.png) | ![Обновление BolgenOS в терминале](docs/screenshots/updater-terminal.png) |
+| ![Окно обновления BolgenOS](docs/screenshots/03-updater-dialog.png) | ![Обновление BolgenOS в терминале](docs/screenshots/04-updater-terminal.png) |
 
 ---
 

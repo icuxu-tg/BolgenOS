@@ -17,11 +17,11 @@
 
 | Desktop (MATE + Plank) | Fastfetch & OgenBrowse |
 | :---: | :---: |
-| ![BolgenOS Desktop](docs/screenshots/desktop.png) | ![Fastfetch and OgenBrowse](docs/screenshots/fastfetch-browser.png) |
+| ![BolgenOS Desktop](docs/screenshots/01-desktop.png) | ![Fastfetch and OgenBrowse](docs/screenshots/02-fastfetch-ogenbrowse.png) |
 
 | GitHub SHA256 Update Prompt | Interactive System Upgrade |
 | :---: | :---: |
-| ![BolgenOS Updater Dialog](docs/screenshots/updater-dialog.png) | ![BolgenOS Updater Terminal](docs/screenshots/updater-terminal.png) |
+| ![BolgenOS Updater Dialog](docs/screenshots/03-updater-dialog.png) | ![BolgenOS Updater Terminal](docs/screenshots/04-updater-terminal.png) |
 
 ---
 
