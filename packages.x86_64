@@ -115,7 +115,6 @@ ttf-dejavu
 ttf-jetbrains-mono
 inter-font
 noto-fonts
-noto-fonts-cjk
 noto-fonts-emoji
 gvfs
 gvfs-mtp
@@ -129,7 +128,6 @@ linux-firmware-amdgpu
 linux-firmware-atheros
 linux-firmware-broadcom
 linux-firmware-intel
-linux-firmware-iwlwifi
 linux-firmware-mediatek
 linux-firmware-nvidia
 linux-firmware-other
