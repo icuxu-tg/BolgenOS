@@ -14,4 +14,3 @@ SUPPORT_URL="https://github.com/icuxu-tg/BolgenOS"
 BUG_REPORT_URL="https://github.com/icuxu-tg/BolgenOS/issues"
 LOGO=bolgenos
 OSREL
-cp -f /etc/os-release /usr/lib/os-release
