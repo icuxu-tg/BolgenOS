@@ -73,6 +73,8 @@ virtualbox-guest-utils
 # Live/install tools & Welcome app runtime
 arch-install-scripts
 calamares
+qt6-declarative
+qt6-svg
 archinstall
 gparted
 git

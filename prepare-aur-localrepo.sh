@@ -41,7 +41,14 @@ fi
 for pkg in "${PKGS[@]}"; do
   tmp="$(mktemp -d)"
   git clone --depth 1 "https://aur.archlinux.org/${pkg}.git" "$tmp/$pkg"
+  if [[ "$pkg" == "calamares" && -f "$tmp/$pkg/PKGBUILD" ]]; then
+    # AUR calamares disables packagechooser/packagechooserq via _skip_modules by default.
+    # BolgenOS requires packagechooser for DE selection in Calamares.
+    sed -i -E '/_skip_modules=/,/\)/ { s/(^|[[:space:]])packagechooserq?([[:space:]]|$)/\1\2/g; s/(^|[[:space:]])packagechooserq?([[:space:]]|$)/\1\2/g; }' "$tmp/$pkg/PKGBUILD"
+    sed -i -E 's/^pkgrel=([0-9]+)(\.[0-9]+)?$/pkgrel=\1.1/' "$tmp/$pkg/PKGBUILD"
+  fi
   (cd "$tmp/$pkg" && makepkg -s --noconfirm)
+  rm -f "$REPO_DIR/${pkg}-"*.pkg.tar.*
   cp "$tmp/$pkg"/*.pkg.tar.* "$REPO_DIR"/
   rm -rf "$tmp"
 done
