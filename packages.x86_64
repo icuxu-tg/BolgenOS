@@ -2,7 +2,6 @@
 base
 archlinux-keyring
 linux
-linux-firmware
 intel-ucode
 amd-ucode
 mkinitcpio
@@ -107,9 +106,6 @@ papirus-icon-theme
 # Apps / features & Russian localization
 firefox
 firefox-i18n-ru
-libreoffice-fresh
-libreoffice-fresh-ru
-hunspell-ru
 vlc
 clamtk
 yay
@@ -129,3 +125,12 @@ unzip
 zip
 p7zip
 bash-completion
+linux-firmware-amdgpu
+linux-firmware-atheros
+linux-firmware-broadcom
+linux-firmware-intel
+linux-firmware-iwlwifi
+linux-firmware-mediatek
+linux-firmware-nvidia
+linux-firmware-other
+linux-firmware-realtek

@@ -14,3 +14,4 @@ SUPPORT_URL="https://github.com/icuxu-tg/BolgenOS"
 BUG_REPORT_URL="https://github.com/icuxu-tg/BolgenOS/issues"
 LOGO=bolgenos
 OSREL
+rm -rf /var/lib/clamav/*.cvd /var/lib/clamav/*.cld /var/cache/pacman/pkg/*
