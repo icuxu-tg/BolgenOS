@@ -81,6 +81,7 @@ jobs:
           tag_name: ${{ steps.release_meta.outputs.tag }}
           name: BolgenOS ${{ steps.release_meta.outputs.tag }}
           generate_release_notes: true
+          overwrite: true
           files: |
             out/*.iso
             out/*.sha256
