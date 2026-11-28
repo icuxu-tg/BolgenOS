@@ -42,7 +42,7 @@
    - **Popov Antivirus** (`clamtk` + Caja context-menu scan script + `clamav-freshclam.service`)
    - **GameHub** (`bolgenos-gamehub`): native GTK3 gaming center — scans installed games, launches them, and installs Steam / Lutris / Wine / Heroic / MangoHud / GameMode / vkBasalt from catalog.
   - **BolgenOS Welcome** (`bolgenos-welcome`): GTK3 welcome hub with wallpaper preview & switcher, `pacman`/`yay` package search, NVIDIA driver helper, Timeshift & system tweaks.
-  - **BolgenOS Updater** (`bolgenos-updater`): compares `/etc/bolgenos-release.sha256` against [`RELEASE_SHA256.txt`](https://github.com/icuxu-tg/BolgenOS/releases/latest) at login and triggers interactive upgrades.
+  - **BolgenOS Updater** (`bolgenos-updater`): checks `/etc/bolgenos-release.sha256` against the latest [`RELEASE_SHA256.txt`](https://github.com/icuxu-tg/BolgenOS/releases/latest) once per release, offers **Update now / Skip this version / Remind later**, then runs `pacman -Syu` (kernel, drivers, desktop, apps) and refreshes BolgenOS components (custom apps, wallpapers, icons, dash-shell) from the GitHub release. Manual: `bolgenos-updater --apply-update`, status: `bolgenos-updater --status`.
    - **Productivity & Recovery:** VLC, PipeWire + `pavucontrol`, Engrampa, GParted, `man-db`, UFW/GUFW, Timeshift, Snapper + `grub-btrfs`, `zram-generator`, Bluetooth, CUPS, and VM guest agents (`qemu-guest-agent`, `spice-vdagent`, `virtualbox-guest-utils`).
    - **Hardware & network extras:** `pciutils`, `gnome-keyring`, `gvfs-smb`/`gvfs-nfs`, `sane-airscan`, `cups-pdf`.
    - **Slim ISO (~2 GB):** bundled firmware is `linux-firmware-intel` + `linux-firmware-realtek`; other firmware, `base-devel`, and extra fonts can be installed later with `pacman`/`yay`.
