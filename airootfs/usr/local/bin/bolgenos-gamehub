@@ -1,0 +1,299 @@
+#!/usr/bin/env python3
+"""GameHub — игровой центр BolgenOS.
+
+Единое приложение для запуска установленных игр и установки игровых
+пакетов (Steam, Lutris, Wine, MangoHud, GameMode и т.д.).
+"""
+import os
+import shutil
+import subprocess
+from pathlib import Path
+
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import GLib, Gtk  # noqa: E402
+
+APP_DIRS = [
+    Path("/usr/share/applications"),
+    Path("/usr/local/share/applications"),
+    Path.home() / ".local/share/applications",
+]
+
+CATALOG = [
+    (
+        "Игровые платформы",
+        [
+            ("steam", "Steam", "Магазин и библиотека Steam (нужен multilib)"),
+            ("lutris", "Lutris", "Менеджер игр: Wine, Proton, эмуляторы"),
+            ("heroic-games-launcher-bin", "Heroic", "Epic Games и GOG (AUR)"),
+        ],
+    ),
+    (
+        "Совместимость",
+        [
+            ("wine", "Wine", "Запуск Windows-приложений"),
+            ("winetricks", "Winetricks", "Настройка Wine-префиксов"),
+            ("protonup-qt", "ProtonUp-Qt", "Установка Proton-GE (AUR)"),
+        ],
+    ),
+    (
+        "Производительность",
+        [
+            ("mangohud", "MangoHud", "Оверлей FPS и нагрузки"),
+            ("lib32-mangohud", "MangoHud (32-bit)", "Оверлей для 32-битных игр"),
+            ("gamemode", "GameMode", "Оптимизация системы под игры"),
+            ("vkbasalt", "vkBasalt", "Постобработка Vulkan (шейдеры)"),
+            ("goverlay", "GOverlay", "Графическая настройка MangoHud/vkBasalt"),
+        ],
+    ),
+]
+
+
+def installed_packages() -> set[str]:
+    try:
+        out = subprocess.check_output(["pacman", "-Qq"], text=True, stderr=subprocess.DEVNULL)
+        return set(out.splitlines())
+    except Exception:
+        return set()
+
+
+def run_in_terminal(cmd: str) -> None:
+    full = f"{cmd}; echo ''; echo 'Готово. Нажмите Enter, чтобы закрыть окно...'; read -r"
+    if shutil.which("mate-terminal"):
+        subprocess.Popen(["mate-terminal", "--", "bash", "-c", full])
+    elif shutil.which("x-terminal-emulator"):
+        subprocess.Popen(["x-terminal-emulator", "-e", "bash", "-c", full])
+    else:
+        subprocess.Popen(["bash", "-c", cmd])
+
+
+def launch(arg: str) -> None:
+    try:
+        subprocess.Popen(["gtk-launch", arg], start_new_session=True)
+    except Exception:
+        subprocess.Popen(["sh", "-c", arg], start_new_session=True)
+
+
+def read_desktop(path: Path) -> dict:
+    data = {}
+    try:
+        for line in path.read_text(errors="ignore").splitlines():
+            if "=" in line and not line.lstrip().startswith("#"):
+                k, v = line.split("=", 1)
+                data.setdefault(k.strip(), v.strip())
+    except OSError:
+        pass
+    return data
+
+
+def discover_games() -> list[tuple[str, str, str]]:
+    games = []
+    seen = set()
+    for directory in APP_DIRS:
+        if not directory.is_dir():
+            continue
+        for path in sorted(directory.glob("*.desktop")):
+            info = read_desktop(path)
+            if info.get("NoDisplay", "").lower() == "true":
+                continue
+            if info.get("Type", "Application") != "Application":
+                continue
+            cats = info.get("Categories", "")
+            if "Game" not in cats and "Emulator" not in cats:
+                continue
+            name = info.get("Name[ru]") or info.get("Name") or path.stem
+            if name in seen:
+                continue
+            seen.add(name)
+            games.append((name, info.get("Comment[ru]") or info.get("Comment", ""), path.stem))
+    return games
+
+
+def sysinfo() -> list[tuple[str, str]]:
+    info = []
+    try:
+        cpu = next(
+            (ln.split(":", 1)[1].strip() for ln in Path("/proc/cpuinfo").read_text().splitlines()
+             if ln.startswith("model name")), "—")
+        info.append(("Процессор", cpu))
+    except Exception:
+        info.append(("Процессор", "—"))
+    try:
+        mem = next((int(ln.split()[1]) for ln in Path("/proc/meminfo").read_text().splitlines()
+                    if ln.startswith("MemTotal:")), 0)
+        info.append(("Память", f"{mem / (1024 * 1024):.1f} ГБ"))
+    except Exception:
+        info.append(("Память", "—"))
+    if shutil.which("lspci"):
+        try:
+            out = subprocess.check_output(["lspci"], text=True, errors="ignore")
+            gpus = [ln.split(": ", 1)[1] for ln in out.splitlines()
+                    if any(k in ln for k in ("VGA compatible", "3D controller", "Display controller"))]
+            info.append(("Видеокарта", "; ".join(gpus) or "не определена"))
+        except Exception:
+            info.append(("Видеокарта", "—"))
+    else:
+        info.append(("Видеокарта", "установите pciutils"))
+    info.append(("Ядро", os.uname().release))
+    return info
+
+
+class GameHub(Gtk.Window):
+    def __init__(self) -> None:
+        super().__init__(title="GameHub — BolgenOS")
+        self.set_default_size(900, 640)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.installed = installed_packages()
+
+        header = Gtk.HeaderBar()
+        header.set_show_close_button(True)
+        header.set_title("GameHub")
+        header.set_subtitle("Игровой центр BolgenOS")
+        self.set_titlebar(header)
+
+        notebook = Gtk.Notebook()
+        notebook.append_page(self._library_tab(), Gtk.Label(label="Библиотека"))
+        notebook.append_page(self._catalog_tab(), Gtk.Label(label="Каталог"))
+        notebook.append_page(self._system_tab(), Gtk.Label(label="Система"))
+        self.add(notebook)
+
+    def _scrolled(self, child: Gtk.Widget) -> Gtk.Widget:
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.add(child)
+        return scroll
+
+    def _library_tab(self) -> Gtk.Widget:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_start(16)
+        box.set_margin_end(16)
+        box.set_margin_top(14)
+        box.set_margin_bottom(14)
+
+        games = discover_games()
+        hint = Gtk.Label(
+            label=f"Найдено игр: {len(games)}. GameHub показывает приложения из категории Game/Emulator."
+        )
+        hint.set_xalign(0)
+        box.pack_start(hint, False, False, 0)
+
+        if not games:
+            empty = Gtk.Label(
+                label="Игры не найдены.\nУстановите Steam, Lutris или Wine во вкладке «Каталог»."
+            )
+            empty.set_justify(Gtk.Justification.CENTER)
+            box.pack_start(empty, True, True, 0)
+            return box
+
+        listbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        for name, comment, desktop_id in games:
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+            text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            title = Gtk.Label()
+            title.set_markup(f"<b>{GLib.markup_escape_text(name)}</b>")
+            title.set_xalign(0)
+            desc = Gtk.Label(label=comment or desktop_id)
+            desc.set_xalign(0)
+            desc.set_ellipsize(3)
+            text.pack_start(title, False, False, 0)
+            text.pack_start(desc, False, False, 0)
+            btn = Gtk.Button(label="Запустить")
+            btn.connect("clicked", lambda _b, d=desktop_id: launch(d))
+            row.pack_start(text, True, True, 0)
+            row.pack_end(btn, False, False, 0)
+            listbox.pack_start(row, False, False, 0)
+
+        box.pack_start(self._scrolled(listbox), True, True, 0)
+        return box
+
+    def _catalog_tab(self) -> Gtk.Widget:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_start(16)
+        box.set_margin_end(16)
+        box.set_margin_top(14)
+        box.set_margin_bottom(14)
+        self.status = Gtk.Label(label="")
+        self.status.set_xalign(0)
+
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        for category, items in CATALOG:
+            frame = Gtk.Frame(label=category)
+            inner = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            inner.set_margin_start(10)
+            inner.set_margin_end(10)
+            inner.set_margin_top(8)
+            inner.set_margin_bottom(8)
+            for pkg, title, desc in items:
+                row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+                label = Gtk.Label()
+                is_inst = pkg in self.installed
+                state = " — установлен" if is_inst else ""
+                label.set_markup(
+                    f"<b>{GLib.markup_escape_text(title)}</b> ({GLib.markup_escape_text(pkg)})"
+                    f"{GLib.markup_escape_text(state)}\n<small>{GLib.markup_escape_text(desc)}</small>"
+                )
+                label.set_xalign(0)
+                btn = Gtk.Button(label="Установить" if not is_inst else "Установлен")
+                btn.set_sensitive(not is_inst)
+                btn.connect("clicked", lambda _b, p=pkg, t=title: self._install(p, t))
+                row.pack_start(label, True, True, 0)
+                row.pack_end(btn, False, False, 0)
+                inner.pack_start(row, False, False, 0)
+            frame.add(inner)
+            content.pack_start(frame, False, False, 0)
+
+        box.pack_start(self._scrolled(content), True, True, 0)
+        box.pack_start(self.status, False, False, 0)
+        return box
+
+    def _system_tab(self) -> Gtk.Widget:
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        box.set_margin_start(16)
+        box.set_margin_end(16)
+        box.set_margin_top(14)
+        box.set_margin_bottom(14)
+
+        frame = Gtk.Frame(label="Оборудование")
+        grid = Gtk.Grid(column_spacing=14, row_spacing=8)
+        grid.set_margin_start(10)
+        grid.set_margin_end(10)
+        grid.set_margin_top(8)
+        grid.set_margin_bottom(8)
+        for i, (k, v) in enumerate(sysinfo()):
+            key = Gtk.Label()
+            key.set_markup(f"<b>{GLib.markup_escape_text(k)}</b>")
+            key.set_xalign(0)
+            val = Gtk.Label(label=v)
+            val.set_xalign(0)
+            val.set_line_wrap(True)
+            grid.attach(key, 0, i, 1, 1)
+            grid.attach(val, 1, i, 1, 1)
+        frame.add(grid)
+        box.pack_start(frame, False, False, 0)
+
+        tip = Gtk.Label(
+            label=(
+                "Советы: включите GameMode для игр (переменная окружения gamemoderun %command%), "
+                "MangoHud показывает FPS (mangohud %command%), vkBasalt добавляет шейдеры."
+            )
+        )
+        tip.set_xalign(0)
+        tip.set_line_wrap(True)
+        box.pack_start(tip, False, False, 0)
+        return box
+
+    def _install(self, pkg: str, title: str) -> None:
+        self.status.set_text(f"Установка: {title} ({pkg})...")
+        run_in_terminal(f"sudo pacman -Syu --needed {pkg} || yay -S --needed {pkg}")
+
+
+def main() -> None:
+    win = GameHub()
+    win.connect("destroy", Gtk.main_quit)
+    win.show_all()
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

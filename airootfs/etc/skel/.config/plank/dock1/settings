@@ -1,0 +1,7 @@
+[PlankDockPreferences]
+Items=ogenbrowse.dockitem;;gamehub.dockitem;;antivirus-popova.dockitem;;caja.dockitem;;mate-terminal.dockitem;;bolgenos-welcome.dockitem;;
+IconSize=44
+HideMode=1
+ZoomEnabled=true
+ZoomPercent=125
+Theme=Transparent

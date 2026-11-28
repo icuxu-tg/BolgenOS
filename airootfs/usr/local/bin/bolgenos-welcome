@@ -321,6 +321,12 @@ class BolgenOSWelcome(Gtk.Window):
                 lambda *_: run_detached(["firefox"]),
             ),
             (
+                "GameHub",
+                "Игровой центр: библиотека игр, Steam, Lutris, Wine, MangoHud и GameMode",
+                "Открыть GameHub",
+                lambda *_: run_detached(["bolgenos-gamehub"]),
+            ),
+            (
                 "Антивирус Попова",
                 "Сканер ClamTk + проверка файлов из контекстного меню Caja",
                 "Запустить сканер",

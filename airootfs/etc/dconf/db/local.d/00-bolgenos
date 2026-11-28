@@ -21,22 +21,8 @@ antialiasing='rgba'
 hinting='slight'
 rgba-order='rgb'
 
-[org/mate/desktop/peripherals/keyboard/kbd]
-layouts=['us','ru']
-options=['grp\tgrp:alt_shift_toggle']
-
 [org/mate/screensaver]
 lock-enabled=false
-
-[net/launchpad/plank/docks/dock1]
-alignment='center'
-hide-mode='intelligent'
-icon-size=44
-position='bottom'
-theme='Transparent'
-zoom-enabled=true
-zoom-percent=125
-dock-items=['ogenbrowse.dockitem', 'antivirus-popova.dockitem', 'caja.dockitem', 'mate-terminal.dockitem', 'bolgenos-welcome.dockitem']
 
 [org/mate/terminal/profiles/default]
 use-custom-command=true

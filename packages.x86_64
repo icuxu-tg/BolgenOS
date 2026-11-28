@@ -65,6 +65,13 @@ timeshift
 snapper
 snap-pac
 
+# Hardware inspection / developer tooling
+pciutils
+base-devel
+man-db
+man-pages
+less
+
 # VM guest utilities
 qemu-guest-agent
 spice-vdagent
@@ -109,6 +116,13 @@ firefox-i18n-ru
 vlc
 clamtk
 yay
+pavucontrol
+engrampa
+gnome-keyring
+gvfs-smb
+gvfs-nfs
+sane-airscan
+cups-pdf
 
 # Fonts / locale / utilities
 ttf-dejavu

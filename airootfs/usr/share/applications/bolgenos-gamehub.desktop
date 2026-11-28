@@ -1,0 +1,15 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=GameHub
+Name[ru]=GameHub
+GenericName=Game Launcher
+GenericName[ru]=Игровой центр
+Comment=Launch installed games and install gaming packages
+Comment[ru]=Запуск игр и установка игровых пакетов
+Exec=/usr/local/bin/bolgenos-gamehub
+Icon=bolgenos-gamehub
+Terminal=false
+Categories=Game;Utility;
+Keywords=game;games;steam;lutris;wine;play;
+StartupNotify=true

@@ -39,10 +39,12 @@
   - Optional online installation of **KDE Plasma 6**, **XFCE**, **Cinnamon**, or **GNOME** right from the Calamares `packagechooser@de` step (`archinstall` also included as CLI fallback).
 - **Preinstalled Apps & Utilities**
   - **OgenBrowse** (`firefox` + `firefox-i18n-ru`)
-  - **Popov Antivirus** (`clamtk` + Caja context-menu scan script + `clamav-freshclam.service`)
+   - **Popov Antivirus** (`clamtk` + Caja context-menu scan script + `clamav-freshclam.service`)
+   - **GameHub** (`bolgenos-gamehub`): native GTK3 gaming center — scans installed games, launches them, and installs Steam / Lutris / Wine / Heroic / MangoHud / GameMode / vkBasalt from catalog.
   - **BolgenOS Welcome** (`bolgenos-welcome`): GTK3 welcome hub with wallpaper preview & switcher, `pacman`/`yay` package search, NVIDIA driver helper, Timeshift & system tweaks.
   - **BolgenOS Updater** (`bolgenos-updater`): compares `/etc/bolgenos-release.sha256` against [`RELEASE_SHA256.txt`](https://github.com/icuxu-tg/BolgenOS/releases/latest) at login and triggers interactive upgrades.
-  - **Productivity & Recovery:** LibreOffice (`ru`), VLC, PipeWire, UFW/GUFW, Timeshift, Snapper + `grub-btrfs`, `zram-generator`, Bluetooth, CUPS, and VM guest agents (`qemu-guest-agent`, `spice-vdagent`, `virtualbox-guest-utils`).
+   - **Productivity & Recovery:** VLC, PipeWire + `pavucontrol`, Engrampa, GParted, `man-db`/`man-pages`, `base-devel` (for `yay`/AUR builds), UFW/GUFW, Timeshift, Snapper + `grub-btrfs`, `zram-generator`, Bluetooth, CUPS, and VM guest agents (`qemu-guest-agent`, `spice-vdagent`, `virtualbox-guest-utils`).
+   - **Hardware & network extras:** `pciutils`, `gnome-keyring`, `gvfs-smb`/`gvfs-nfs`, `sane-airscan`, `cups-pdf`.
 - **Ready-to-Use `pacman` Setup**
   - Preconfigured HTTPS Arch mirrors (`/etc/pacman.d/mirrorlist`) and automatic GPG keyring initialization (`bolgenos-pacman-init.service`) in both Live ISO and installed systems.
 
