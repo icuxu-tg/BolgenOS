@@ -29,7 +29,6 @@ gst-plugins-ugly
 
 # Graphics & compositor
 mesa
-intel-media-driver
 xf86-video-amdgpu
 xf86-video-intel
 xf86-video-nouveau
@@ -65,11 +64,9 @@ timeshift
 snapper
 snap-pac
 
-# Hardware inspection / developer tooling
+# Hardware inspection / documentation
 pciutils
-base-devel
 man-db
-man-pages
 less
 
 # VM guest utilities
@@ -82,7 +79,6 @@ arch-install-scripts
 calamares
 qt6-declarative
 qt6-svg
-archinstall
 gparted
 git
 reflector
@@ -128,8 +124,6 @@ cups-pdf
 ttf-dejavu
 ttf-jetbrains-mono
 inter-font
-noto-fonts
-noto-fonts-emoji
 gvfs
 gvfs-mtp
 xdg-user-dirs
@@ -138,11 +132,8 @@ unzip
 zip
 p7zip
 bash-completion
-linux-firmware-amdgpu
-linux-firmware-atheros
-linux-firmware-broadcom
+# Slim firmware set to keep the ISO around 2 GB. Add the rest later via pacman:
+# linux-firmware-amdgpu linux-firmware-nvidia linux-firmware-atheros
+# linux-firmware-mediatek linux-firmware-broadcom linux-firmware-other
 linux-firmware-intel
-linux-firmware-mediatek
-linux-firmware-nvidia
-linux-firmware-other
 linux-firmware-realtek

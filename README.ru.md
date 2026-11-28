@@ -36,15 +36,16 @@
   - Подсветка синтаксиса на лету, серые подсказки из истории и команд, дополнение по `Tab`, поиск `Ctrl+R`, арифметика `$((...))`, пайпы и алиасы в `/etc/dashrc` (`ll`, `la`, `ff`, `up`).
 - **Установщик Calamares с выбором рабочего стола**
   - **MATE + Plank** вшит в образ и устанавливается **офлайн** по умолчанию.
-  - При наличии интернета прямо в установщике (`packagechooser@de`) можно выбрать **KDE Plasma 6**, **XFCE**, **Cinnamon** или **GNOME** (также есть CLI-установщик `archinstall`).
+   - При наличии интернета прямо в установщике (`packagechooser@de`) можно выбрать **KDE Plasma 6**, **XFCE**, **Cinnamon** или **GNOME**.
 - **Предустановленные программы и утилиты**
   - **OgenBrowse** (`firefox` + `firefox-i18n-ru`)
    - **Антивирус Попова** (`clamtk` + пункт проверки в контекстном меню Caja + `clamav-freshclam.service`)
    - **GameHub** (`bolgenos-gamehub`): игровой центр на GTK3 — находит установленные игры, запускает их и ставит Steam / Lutris / Wine / Heroic / MangoHud / GameMode / vkBasalt из каталога.
   - **BolgenOS Welcome** (`bolgenos-welcome`): GTK3-приложение с превью и сменой обоев, поиском/установкой пакетов (`pacman` / `yay`), автонастройкой NVIDIA, Timeshift и твиками.
   - **BolgenOS Updater** (`bolgenos-updater`): при входе в систему сравнивает локальный `/etc/bolgenos-release.sha256` с [`RELEASE_SHA256.txt`](https://github.com/icuxu-tg/BolgenOS/releases/latest) на GitHub и предлагает обновить систему.
-   - **Система и мультимедиа:** VLC, PipeWire + `pavucontrol`, Engrampa, GParted, `man-db`/`man-pages`, `base-devel` (для сборки AUR через `yay`), UFW/GUFW, Timeshift, Snapper + `grub-btrfs`, `zram-generator`, Bluetooth, CUPS, а также гостевые утилиты VM (`qemu-guest-agent`, `spice-vdagent`, `virtualbox-guest-utils`).
+   - **Система и мультимедиа:** VLC, PipeWire + `pavucontrol`, Engrampa, GParted, `man-db`, UFW/GUFW, Timeshift, Snapper + `grub-btrfs`, `zram-generator`, Bluetooth, CUPS, а также гостевые утилиты VM (`qemu-guest-agent`, `spice-vdagent`, `virtualbox-guest-utils`).
    - **Железо и сеть:** `pciutils`, `gnome-keyring`, `gvfs-smb`/`gvfs-nfs`, `sane-airscan`, `cups-pdf`.
+   - **Компактный ISO (~2 ГБ):** в образе только `linux-firmware-intel` и `linux-firmware-realtek`; остальное firmware, `base-devel` и дополнительные шрифты ставятся позже через `pacman`/`yay`.
 - **Работающий «из коробки» `pacman`**
   - Заранее прописанные HTTPS-зеркала (`/etc/pacman.d/mirrorlist`) и автоинициализация GPG-ключей (`bolgenos-pacman-init.service`) как в Live-режиме, так и после установки.
 

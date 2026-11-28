@@ -20,7 +20,7 @@
 - Plank (док), Picom (композитор)
 - LightDM + `lightdm-gtk-greeter`
 - Темы: `materia-gtk-theme`, `papirus-icon-theme`
-- Шрифты: `ttf-dejavu`, `ttf-jetbrains-mono`, `inter-font`, `noto-fonts`, `noto-fonts-emoji`
+- Шрифты: `ttf-dejavu`, `ttf-jetbrains-mono`, `inter-font` (для экономии места `noto-fonts`/`noto-fonts-emoji` не включены — ставятся через pacman)
 - 16 обоев в `/usr/share/bolgenos/backgrounds/`
 - Plymouth, GRUB/Syslinux темы, fastfetch
 
@@ -47,12 +47,14 @@
 
 ## Разработка и утилиты
 
-- `base-devel`, `git`
+- `git`
 - Python 3 + `python-gobject`
 - `nano`, `vim`, `htop`, `fastfetch`
 - `curl`, `jq`, `rsync`
-- `bash-completion`, `man-db`, `man-pages`, `less`
+- `bash-completion`, `man-db`, `less`
 - `pciutils` (lspci)
+
+> `base-devel` не входит в ISO для экономии места. Для сборки AUR-пакетов через `yay` установите его: `sudo pacman -S base-devel`.
 
 ## Система, безопасность, восстановление
 
@@ -67,7 +69,7 @@
 ## Установка, разметка, загрузка
 
 - Calamares (с выбором DE: MATE / KDE Plasma 6 / XFCE / Cinnamon / GNOME)
-- `archinstall`, `arch-install-scripts`, GParted
+- `arch-install-scripts`, GParted
 - `grub`, `syslinux`, `efibootmgr`, `os-prober`, `memtest86+`
 - Файловые системы: `dosfstools`, `e2fsprogs`, `btrfs-progs`, `ntfs-3g`, `gptfdisk`, `parted`, `mtools`, `squashfs-tools`
 - `reflector`
